@@ -1,0 +1,50 @@
+package maas
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/canonical/gomaasclient/client"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func dataSourceMaasZone() *schema.Resource {
+	return &schema.Resource{
+		Description: "Provides details about an existing MAAS zone.",
+		ReadContext: dataSourceZoneRead,
+
+		Schema: map[string]*schema.Schema{
+			"description": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "A brief description of the zone.",
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The zone's name.",
+			},
+		},
+	}
+}
+
+func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*client.Client)
+
+	zone, err := getZone(client, d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(zone.Name)
+	tfstate := map[string]interface{}{
+		"id":          fmt.Sprintf("%v", zone.ID),
+		"name":        zone.Name,
+		"description": zone.Description,
+	}
+	if err := setTerraformState(d, tfstate); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
