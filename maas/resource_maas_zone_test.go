@@ -15,7 +15,6 @@ import (
 )
 
 func TestAccResourceMaasZone_basic(t *testing.T) {
-
 	var zone entity.Zone
 	name := acctest.RandomWithPrefix("tf-zone-")
 	description := "Test description"
@@ -27,6 +26,7 @@ func TestAccResourceMaasZone_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testutils.PreCheck(t, nil) },
 		Providers:    testutils.TestAccProviders,
 		CheckDestroy: testAccCheckMaasZoneDestroy,
 		ErrorCheck:   func(err error) error { return err },
@@ -49,6 +49,12 @@ func TestAccResourceMaasZone_basic(t *testing.T) {
 					assert.Equal(t, zone.Attributes["description"], description)
 					return nil
 				},
+			},
+			// Test import using ID
+			{
+				ResourceName:      "maas_zone.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
