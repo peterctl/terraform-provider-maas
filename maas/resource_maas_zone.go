@@ -24,13 +24,7 @@ func resourceMaasZone() *schema.Resource {
 				if err != nil {
 					return nil, err
 				}
-				tfState := map[string]interface{}{
-					"name":        zone.Name,
-					"description": zone.Description,
-				}
-				if err := setTerraformState(d, tfState); err != nil {
-					return nil, err
-				}
+				d.SetId(zone.Name)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -58,6 +52,8 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.FromErr(err)
 	}
 
+	d.SetId(zone.Name)
+
 	tfstate := map[string]any{
 		"name":        zone.Name,
 		"description": zone.Description,
@@ -74,28 +70,24 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	client := meta.(*client.Client)
 
 	params := getZoneParams(d)
-	zone, err := findZone(client, params.Name)
+	zone, err := client.Zones.Create(params)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if zone == nil {
-		zone, err = client.Zones.Create(params)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
 	d.SetId(zone.Name)
 
-	return resourceZoneUpdate(ctx, d, meta)
+	return resourceZoneRead(ctx, d, meta)
 }
 
 func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*client.Client)
 
 	params := getZoneParams(d)
-	if _, err := client.Zone.Update(d.Id(), params); err != nil {
+	zone, err := client.Zone.Update(d.Id(), params)
+	if err != nil {
 		return diag.FromErr(err)
 	}
+	d.SetId(zone.Name)
 
 	return resourceZoneRead(ctx, d, meta)
 }

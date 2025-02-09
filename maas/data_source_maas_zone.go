@@ -2,7 +2,6 @@ package maas
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/canonical/gomaasclient/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,7 +37,6 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.SetId(zone.Name)
 	tfstate := map[string]interface{}{
-		"id":          fmt.Sprintf("%v", zone.ID),
 		"name":        zone.Name,
 		"description": zone.Description,
 	}
