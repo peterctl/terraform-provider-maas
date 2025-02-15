@@ -72,7 +72,7 @@ func testAccMaasZoneCheckExists(rn string, zone *entity.Zone) resource.TestCheck
 		}
 
 		conn := testutils.TestAccProvider.Meta().(*client.Client)
-		gotZone, err := conn.Zone.Get(rs.Primary.ID)
+		gotZone, err := getZone(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error getting zone: %s", err)
 		}
@@ -104,9 +104,9 @@ func testAccCheckMaasZoneDestroy(s *terraform.State) error {
 		}
 
 		// Retrieve our maas_zone by referencing it's state ID for API lookup
-		response, err := conn.Zone.Get(rs.Primary.ID)
+		response, err := getZone(conn, rs.Primary.ID)
 		if err == nil {
-			if response != nil && response.Name == rs.Primary.ID {
+			if response != nil && fmt.Sprintf("%v", response.ID) == rs.Primary.ID {
 				return fmt.Errorf("MAAS Zone (%s) still exists.", rs.Primary.ID)
 			}
 
@@ -121,4 +121,17 @@ func testAccCheckMaasZoneDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func getZone(client *client.Client, identifier string) (*entity.Zone, error) {
+	zones, err := client.Zones.Get()
+	if err != nil {
+		return nil, err
+	}
+	for _, z := range zones {
+		if fmt.Sprintf("%v", z.ID) == identifier || z.Name == identifier {
+			return &z, nil
+		}
+	}
+	return nil, fmt.Errorf("404 Not Found: %v", identifier)
 }

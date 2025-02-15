@@ -24,7 +24,7 @@ func resourceMaasZone() *schema.Resource {
 				if err != nil {
 					return nil, err
 				}
-				d.SetId(zone.Name)
+				d.SetId(fmt.Sprintf("%v", zone.ID))
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -47,12 +47,12 @@ func resourceMaasZone() *schema.Resource {
 func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*client.Client)
 
-	zone, err := client.Zone.Get(d.Id())
+	zone, err := getZone(client, d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(zone.Name)
+	d.SetId(fmt.Sprintf("%v", zone.ID))
 
 	tfstate := map[string]any{
 		"name":        zone.Name,
@@ -74,7 +74,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(zone.Name)
+	d.SetId(fmt.Sprintf("%v", zone.ID))
 
 	return resourceZoneRead(ctx, d, meta)
 }
@@ -83,11 +83,15 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	client := meta.(*client.Client)
 
 	params := getZoneParams(d)
-	zone, err := client.Zone.Update(d.Id(), params)
+	zone, err := getZone(client, d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(zone.Name)
+	zone, err = client.Zone.Update(zone.Name, params)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(fmt.Sprintf("%v", zone.ID))
 
 	return resourceZoneRead(ctx, d, meta)
 }
@@ -95,7 +99,11 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*client.Client)
 
-	if err := client.Zone.Delete(d.Id()); err != nil {
+	zone, err := getZone(client, d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := client.Zone.Delete(zone.Name); err != nil {
 		return diag.FromErr(err)
 	}
 
