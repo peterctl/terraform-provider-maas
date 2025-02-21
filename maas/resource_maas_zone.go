@@ -19,7 +19,7 @@ func resourceMaasZone() *schema.Resource {
 		DeleteContext: resourceZoneDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				client := meta.(*client.Client)
+				client := meta.(*ClientConfig).Client
 				zone, err := getZone(client, d.Id())
 				if err != nil {
 					return nil, err
@@ -45,7 +45,7 @@ func resourceMaasZone() *schema.Resource {
 }
 
 func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*client.Client)
+	client := meta.(*ClientConfig).Client
 
 	zone, err := getZone(client, d.Id())
 	if err != nil {
@@ -67,7 +67,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*client.Client)
+	client := meta.(*ClientConfig).Client
 
 	params := getZoneParams(d)
 	zone, err := client.Zones.Create(params)
@@ -80,7 +80,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*client.Client)
+	client := meta.(*ClientConfig).Client
 
 	params := getZoneParams(d)
 	zone, err := getZone(client, d.Id())
@@ -97,7 +97,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*client.Client)
+	client := meta.(*ClientConfig).Client
 
 	zone, err := getZone(client, d.Id())
 	if err != nil {

@@ -3,6 +3,7 @@ package maas_test
 import (
 	"fmt"
 	"strings"
+	"terraform-provider-maas/maas"
 	"terraform-provider-maas/maas/testutils"
 	"testing"
 
@@ -71,7 +72,7 @@ func testAccMaasZoneCheckExists(rn string, zone *entity.Zone) resource.TestCheck
 			return fmt.Errorf("resource id not set")
 		}
 
-		conn := testutils.TestAccProvider.Meta().(*client.Client)
+		conn := testutils.TestAccProvider.Meta().(*maas.ClientConfig).Client
 		gotZone, err := getZone(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error getting zone: %s", err)
@@ -94,7 +95,7 @@ resource "maas_zone" "test" {
 
 func testAccCheckMaasZoneDestroy(s *terraform.State) error {
 	// retrieve the connection established in Provider configuration
-	conn := testutils.TestAccProvider.Meta().(*client.Client)
+	conn := testutils.TestAccProvider.Meta().(*maas.ClientConfig).Client
 
 	// loop through the resources in state, verifying each maas_zone
 	// is destroyed
